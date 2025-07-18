@@ -29,3 +29,32 @@ jobs:
 
       - name: Build and test with Maven
         run: mvn clean verify
+
+  compose:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and start services with Docker Compose
+        run: docker-compose up --build -d
+
+      - name: Wait for app to be healthy
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/api/actuator/health | grep UP; then
+              echo "App is up!"
+              exit 0
+            fi
+            echo "Waiting for app..."
+            sleep 5
+          done
+          echo "App did not start in time"
+          docker-compose logs
+          exit 1
+
+      - name: Stop and remove containers
+        run: docker-compose down -v
