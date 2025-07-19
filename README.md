@@ -20,7 +20,7 @@ Cake Management System is a Spring Boot application that provides a RESTful API 
 - Java 24 or higher
 - Maven 3.6+
 - Docker & Docker Compose
-- 
+
 ### Running with Docker (Recommended)
 
 1. Clone the repository
