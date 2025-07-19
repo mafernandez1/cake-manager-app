@@ -53,6 +53,29 @@ mvn test
 
 ## API Endpoints
 
+### Public access
+
+**GET** `/api/actuator/health`
+
+### API Documentation (Swagger/OpenAPI)
+
+This application provides interactive API documentation using Swagger UI, powered by OpenAPI 3.
+
+- **Swagger UI:**  
+  Once the application is running, access the API docs at:  
+  [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)  
+  or  
+  [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
+- **OpenAPI Spec:**  
+  The raw OpenAPI JSON is available at:  
+  [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+Swagger UI allows you to explore and test all available endpoints, view request/response schemas, and see example payloads.
+
+> **Note:**  
+> The API is secured with JWT authentication. For protected endpoints, use the `Authorize` button in Swagger UI and provide a valid Bearer token.
+
 ### Authentication Endpoints
 
 #### Register a new user
@@ -193,9 +216,5 @@ All endpoints require authentication (JWT Bearer token in the `Authorization` he
   If the cake was successfully deleted.
 - `404 Not Found`  
   If the cake does not exist.
-
-### Public access
-
-**GET** `/api/actuator/health`
 
 
