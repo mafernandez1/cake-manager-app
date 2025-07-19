@@ -2,6 +2,7 @@ package com.waracle.demo.cake.manager.api.manager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.waracle.demo.cake.manager.TestContainersConfiguration;
+import com.waracle.demo.cake.manager.api.manager.dto.CmCakeDto;
 import com.waracle.demo.cake.manager.api.security.dto.LoginRequest;
 import com.waracle.demo.cake.manager.config.DataInitialiser;
 import com.waracle.demo.cake.manager.models.manager.CmCake;
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -24,10 +24,10 @@ import java.util.List;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -71,14 +71,14 @@ class CakeControllerTest {
         // verifying that the repository is empty before creating a new cake
         assertEquals(0, cakeRepository.count());
 
-        CmCake newCake = new CmCake("Red Velvet Cake", "Delicious red velvet cake", "redvelvet.jpg");
+        CmCakeDto newCake = new CmCakeDto( null,"Red Velvet Cake", "Delicious red velvet cake", "redvelvet.jpg");
 
         // Create a new cake
         mockMvc.perform(post("/cake")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newCake)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Red Velvet Cake"))
                 .andExpect(jsonPath("$.description").value("Delicious red velvet cake"));
 
@@ -98,10 +98,10 @@ class CakeControllerTest {
         existingCake.setDescription("Updated description for the cake");
 
         // Update the existing cake
-        mockMvc.perform(post("/cake")
+        mockMvc.perform(put("/cake")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(existingCake)))
+                        .content(objectMapper.writeValueAsString(CmCakeDto.toDto(existingCake))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Updated Cake Name"))
                 .andExpect(jsonPath("$.description").value("Updated description for the cake"));
@@ -124,10 +124,22 @@ class CakeControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    @DisplayName("Test deleting a cake with insufficient permissions")
+    void testDeleteCakeWithInsufficientPermissions() throws Exception {
+        createTestCakes();
+        CmCake existingCake = cakeRepository.findAll().getFirst();
+
+        // Attempt to delete the cake without admin permissions
+        String userToken = loginAndGetToken(DataInitialiser.DEFAULT_USER_EMAIL, DataInitialiser.DEFAULT_USER_PASSWORD);
+        mockMvc.perform(delete("/cake/" + existingCake.getId())
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isForbidden());
+    }
 
     private void createTestCakes() {
-        CmCake cake1 = new CmCake("Chocolate Cake", "Delicious chocolate cake", "chocolate.jpg");
-        CmCake cake2 = new CmCake("Vanilla Cake", "Tasty vanilla cake", "vanilla.jpg");
+        CmCake cake1 = new CmCake(null, "Chocolate Cake", "Delicious chocolate cake", "chocolate.jpg");
+        CmCake cake2 = new CmCake(null, "Vanilla Cake", "Tasty vanilla cake", "vanilla.jpg");
         cakeRepository.saveAll(List.of(cake1, cake2));
     }
 

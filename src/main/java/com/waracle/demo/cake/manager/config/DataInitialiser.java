@@ -23,8 +23,12 @@ import java.util.Set;
 @Component
 public class DataInitialiser implements CommandLineRunner {
 
-    public static final String DEFAULT_ADMIN_EMAIL = "admin.demo@waracle.com";
+    public static final String DEFAULT_ADMIN_EMAIL = "admin.demo@test.com";
     public static final String DEFAULT_ADMIN_PASSWORD = "admin123";
+    public static final String DEFAULT_USER_EMAIL = "user.demo@test.com";
+    public static final String DEFAULT_USER_PASSWORD = "user123";
+
+    private static final String CAKE_JSON_URL = "https://gist.githubusercontent.com/hart88/198f29ec5114a3ec3460/raw/8dd19a88f9b8d24c23d9960f3300d0c917a4f07c/cake.json";
 
     private final CmRoleRepository roleRepository;
     private final CmUserRepository userRepository;
@@ -59,6 +63,16 @@ public class DataInitialiser implements CommandLineRunner {
             userRepository.save(adminUser);
             System.out.println("Default admin user created successfully!");
         }
+        // Initialize a default user if it doesn't exist
+        if (!userRepository.existsByEmail(DEFAULT_USER_EMAIL)) {
+            CmRole userRole = roleRepository.findByName(CmRoleType.USER).orElseThrow(() -> new RuntimeException("User role not found!"));
+            CmUser user = new CmUser();
+            user.setEmail(DEFAULT_USER_EMAIL);
+            user.setPassword(encoder.encode(DEFAULT_USER_PASSWORD));
+            user.setRoles(Set.of(userRole));
+            userRepository.save(user);
+            System.out.println("Default user created successfully!");
+        }
         // Initialize cakes from JSON if the repository is empty
         if (cakeRepository.count() == 0) {
             initialiseCakes();
@@ -67,7 +81,7 @@ public class DataInitialiser implements CommandLineRunner {
 
     private void initialiseCakes() {
         System.out.println("downloading cake json");
-        try (InputStream inputStream = new URL("https://gist.githubusercontent.com/hart88/198f29ec5114a3ec3460/raw/8dd19a88f9b8d24c23d9960f3300d0c917a4f07c/cake.json").openStream()) {
+        try (InputStream inputStream = new URL(CAKE_JSON_URL).openStream()) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
             StringBuffer buffer = new StringBuffer();

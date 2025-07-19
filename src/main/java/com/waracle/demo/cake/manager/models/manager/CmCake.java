@@ -21,7 +21,8 @@ public class CmCake {
     private String description;
     private String image;
 
-    public CmCake(String title, String description, String image) {
+    public CmCake(Long id, String title, String description, String image) {
+        this.id = id;
         this.title = title;
         this.description = description;
         this.image = image;

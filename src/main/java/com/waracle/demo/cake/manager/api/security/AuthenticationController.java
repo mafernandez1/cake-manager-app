@@ -11,6 +11,12 @@ import com.waracle.demo.cake.manager.repository.security.CmRoleRepository;
 import com.waracle.demo.cake.manager.repository.security.CmUserRepository;
 import com.waracle.demo.cake.manager.security.jwt.JwtUtils;
 import com.waracle.demo.cake.manager.security.services.UserDetailsImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,6 +31,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Tag(name = "Authentication", description = "Endpoints for user authentication and registration")
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
@@ -47,6 +54,13 @@ public class AuthenticationController {
         this.jwtUtils = jwtUtils;
     }
 
+    @Operation(summary = "Authenticate user", description = "Sign in with email and password to receive a JWT token")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Authentication successful",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = JwtResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
     @PostMapping("/sign-in")
     public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
@@ -67,6 +81,13 @@ public class AuthenticationController {
                 roles));
     }
 
+    @Operation(summary = "Register user", description = "Sign up a new user account")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User registered successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Email already in use or invalid input")
+    })
     @PostMapping("/sign-up")
     public ResponseEntity<MessageResponse> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
         if (userRepository.existsByEmail(signUpRequest.email())) {
