@@ -63,13 +63,13 @@ This application provides interactive API documentation using Swagger UI, powere
 
 - **Swagger UI:**  
   Once the application is running, access the API docs at:  
-  [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)  
+  [http://localhost:8080/swagger-ui.html](http://localhost:8080/api/swagger-ui.html)  
   or  
-  [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+  [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/api/swagger-ui/index.html)
 
 - **OpenAPI Spec:**  
   The raw OpenAPI JSON is available at:  
-  [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+  [http://localhost:8080/v3/api-docs](http://localhost:8080/api/v3/api-docs)
 
 Swagger UI allows you to explore and test all available endpoints, view request/response schemas, and see example payloads.
 
