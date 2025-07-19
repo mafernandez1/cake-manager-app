@@ -63,6 +63,9 @@ public class CakeController {
     })
     @PostMapping
     public ResponseEntity<CmCakeDto> createCake(@Valid @RequestBody CmCakeDto cmCakeDto) {
+        if (cmCakeDto.id() != null) {
+            return ResponseEntity.badRequest().build();
+        }
         CmCake savedCake = cakeRepository.save(CmCakeDto.toEntity(cmCakeDto));
         return new ResponseEntity<>(CmCakeDto.toDto(savedCake), HttpStatus.CREATED);
     }
@@ -74,9 +77,13 @@ public class CakeController {
                             schema = @Schema(implementation = CmCakeDto.class))),
             @ApiResponse(responseCode = "404", description = "Cake not found")
     })
-    @PutMapping
-    public ResponseEntity<CmCakeDto> updateCake(@Valid @RequestBody CmCakeDto cmCakeDto) {
-        if (!cakeRepository.existsById(cmCakeDto.id())) {
+    @PutMapping("/{id}")
+    public ResponseEntity<CmCakeDto> updateCake(@PathVariable Long id, @Valid @RequestBody CmCakeDto cmCakeDto) {
+        if (id == null || !id.equals(cmCakeDto.id())) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (!cakeRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
         CmCake updatedCake = cakeRepository.save(CmCakeDto.toEntity(cmCakeDto));

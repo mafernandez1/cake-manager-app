@@ -1,12 +1,13 @@
 package com.waracle.demo.cake.manager.api.manager.dto;
 
 import com.waracle.demo.cake.manager.models.manager.CmCake;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "Data Transfer Object for Cake")
 public record CmCakeDto(
-        @Schema(description = "Cake ID", example = "1")
+        @Hidden
         Long id,
 
         @Schema(description = "Cake title", example = "Chocolate Cake")

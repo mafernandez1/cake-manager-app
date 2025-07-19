@@ -90,6 +90,19 @@ class CakeControllerTest {
     }
 
     @Test
+    @DisplayName("Test create cake with bad request")
+    void testCreateCakeWithBadPayload() throws Exception {
+        CmCakeDto invalidCake = new CmCakeDto(1L, "", "Invalid cake without title", "invalid.jpg");
+
+        // Attempt to create a cake with invalid data
+        mockMvc.perform(post("/cake")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidCake)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("Test updating an existing cake")
     void testUpdateCake() throws Exception {
         createTestCakes();
@@ -98,13 +111,41 @@ class CakeControllerTest {
         existingCake.setDescription("Updated description for the cake");
 
         // Update the existing cake
-        mockMvc.perform(put("/cake")
+        mockMvc.perform(put("/cake/" + existingCake.getId())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(CmCakeDto.toDto(existingCake))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Updated Cake Name"))
                 .andExpect(jsonPath("$.description").value("Updated description for the cake"));
+    }
+
+    @Test
+    @DisplayName("Test updating a cake with no ID")
+    void testUpdateCakeWithNoId() throws Exception {
+        createTestCakes();
+        CmCake existingCake = cakeRepository.findAll().getFirst();
+
+        // Attempt to update the cake with no ID
+        mockMvc.perform(put("/cake/")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(CmCakeDto.toDto(existingCake))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Test updating a cake with invalid ID")
+    void testUpdateCakeWithInvalidId() throws Exception {
+        createTestCakes();
+        CmCake existingCake = cakeRepository.findAll().getFirst();
+
+        // Attempt to update the cake with an invalid ID
+        mockMvc.perform(put("/cake/" + 999L)
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(CmCakeDto.toDto(existingCake))))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

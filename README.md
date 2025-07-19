@@ -208,7 +208,7 @@ All endpoints require authentication (JWT Bearer token in the `Authorization` he
 
 #### Delete a cake
 
-**DELETE** `/cake/{id}`
+**DELETE** `/cake/{id}` (Only for ADMIN role)
 
 **Response:**
 
