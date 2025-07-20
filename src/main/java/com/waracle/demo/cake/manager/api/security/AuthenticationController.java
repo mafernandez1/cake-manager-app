@@ -4,10 +4,9 @@ import com.waracle.demo.cake.manager.api.security.dto.JwtResponse;
 import com.waracle.demo.cake.manager.api.security.dto.LoginRequest;
 import com.waracle.demo.cake.manager.api.security.dto.MessageResponse;
 import com.waracle.demo.cake.manager.api.security.dto.SignUpRequest;
+import com.waracle.demo.cake.manager.api.security.services.CmRoleService;
 import com.waracle.demo.cake.manager.models.security.CmRole;
-import com.waracle.demo.cake.manager.models.security.CmRoleType;
 import com.waracle.demo.cake.manager.models.security.CmUser;
-import com.waracle.demo.cake.manager.repository.security.CmRoleRepository;
 import com.waracle.demo.cake.manager.repository.security.CmUserRepository;
 import com.waracle.demo.cake.manager.security.jwt.JwtUtils;
 import com.waracle.demo.cake.manager.security.services.UserDetailsImpl;
@@ -18,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,21 +37,24 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
+
     AuthenticationManager authenticationManager;
 
     CmUserRepository userRepository;
 
-    CmRoleRepository roleRepository;
+    CmRoleService roleService;
 
     PasswordEncoder encoder;
 
     JwtUtils jwtUtils;
 
     public AuthenticationController(AuthenticationManager authenticationManager, CmUserRepository userRepository,
-                                      CmRoleRepository roleRepository, PasswordEncoder encoder, JwtUtils jwtUtils) {
+                                    CmRoleService roleService, PasswordEncoder encoder, JwtUtils jwtUtils) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
+        this.roleService = roleService;
         this.encoder = encoder;
         this.jwtUtils = jwtUtils;
     }
@@ -104,23 +109,20 @@ public class AuthenticationController {
         Set<CmRole> roles = new HashSet<>();
 
         if (strRoles == null || strRoles.isEmpty()) {
-            CmRole userRole = roleRepository.findByName(CmRoleType.USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-            roles.add(userRole);
+            Optional<CmRole> userRole = roleService.getRoleByName("user");
+            if (userRole.isEmpty()) {
+                return ResponseEntity.badRequest().body(new MessageResponse("Error: 'User' role is not found."));
+            }
+            roles.add(userRole.get());
         } else {
-            strRoles.forEach(role -> {
-                switch (role) {
-                    case "admin":
-                        CmRole adminRole = roleRepository.findByName(CmRoleType.ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(adminRole);
-                        break;
-                    default:
-                        CmRole userRole = roleRepository.findByName(CmRoleType.USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(userRole);
+            for (String role : strRoles) {
+                Optional<CmRole> foundRole = roleService.getRoleByName(role);
+                if (foundRole.isEmpty()) {
+                    logger.error("Role not found: {}", role);
+                    return ResponseEntity.badRequest().body(new MessageResponse("Error: '" + role + "' not found."));
                 }
-            });
+                roles.add(foundRole.get());
+            }
         }
 
         user.setRoles(roles);

@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.waracle.demo.cake.manager.TestContainersConfiguration;
 import com.waracle.demo.cake.manager.api.security.dto.LoginRequest;
 import com.waracle.demo.cake.manager.api.security.dto.SignUpRequest;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -35,6 +35,7 @@ class AuthenticationControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @DisplayName("Test user registration and login")
     void testUserRegistrationAndLogin() throws Exception {
         // Test user registration
         SignUpRequest signupRequest = new SignUpRequest("test@example.com", "password123", Set.of());
@@ -67,6 +68,7 @@ class AuthenticationControllerTest {
     }
 
     @Test
+    @DisplayName("Test user registration with existing email")
     void testDuplicateUserRegistration() throws Exception {
         // Register first user
         SignUpRequest signupRequest = new SignUpRequest("duplicate@example.com", "password123", Set.of());
@@ -85,6 +87,20 @@ class AuthenticationControllerTest {
     }
 
     @Test
+    @DisplayName("Test user registration with invalid role")
+    void testUserRegistrationWithInvalidRole() throws Exception {
+        // Register first user
+        SignUpRequest signupRequest = new SignUpRequest("duplicate@example.com", "password123", Set.of("invalid_role"));
+
+        mockMvc.perform(post("/auth/sign-up")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(signupRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Error: 'invalid_role' not found."));;
+    }
+
+    @Test
+    @DisplayName("Test unauthorized access to protected endpoint")
     void testUnauthorizedAccess() throws Exception {
         // Test accessing protected endpoint without token
         mockMvc.perform(get("/api/cake"))
